@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import requests
-from sklearn.metrics.pairwise import cosine_similarity
 
 # OMDB API - Add your OMDB API key here
 OMDB_API_KEY = '55012f93'  # Replace with your actual OMDB API key
@@ -31,20 +30,27 @@ def fetch_poster_url(imdb_id):
 
 
 # Get movie recommendations
+from scipy.spatial.distance import cosine
+
 def get_movie_recommendations(movie_id, ratings_matrix, movies, links, k=5):
     # Get the index of the movie in the DataFrame
     movie_idx = list(ratings_matrix.columns).index(movie_id)
     
-    # Compute cosine similarities
-    movie_similarities = cosine_similarity(ratings_matrix.T)  # Transpose for movie similarities
+    # Create an array to hold the similarities
+    movie_similarities = []
     
-    # Get similar movies
-    similar_movies = list(enumerate(movie_similarities[movie_idx]))
-    similar_movies = sorted(similar_movies, key=lambda x: x[1], reverse=True)
+    # Compute cosine similarities
+    for idx in range(ratings_matrix.shape[1]):
+        if idx != movie_idx:  # Skip the same movie
+            similarity = 1 - cosine(ratings_matrix.iloc[:, movie_idx], ratings_matrix.iloc[:, idx])
+            movie_similarities.append((idx, similarity))
+    
+    # Sort similar movies by similarity
+    similar_movies = sorted(movie_similarities, key=lambda x: x[1], reverse=True)
     
     # Get top k recommendations (excluding the selected movie)
     recommendations = []
-    for i in similar_movies[1:k+1]:
+    for i in similar_movies[:k]:
         recommended_movie_id = ratings_matrix.columns[i[0]]
         movie_title = movies[movies['movieId'] == recommended_movie_id]['title'].values[0]
         
@@ -53,6 +59,7 @@ def get_movie_recommendations(movie_id, ratings_matrix, movies, links, k=5):
         poster_url = fetch_poster_url(imdbID)  # Fetch poster using IMDb ID
         recommendations.append((movie_title, poster_url, imdbID))
     return recommendations
+
 
 # Streamlit app
 st.title('Movie Recommendation App')
