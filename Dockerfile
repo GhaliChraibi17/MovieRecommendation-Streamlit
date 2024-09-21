@@ -7,11 +7,10 @@ WORKDIR /app
 # Clone the repo directly from GitHub
 RUN apt-get update && \
     apt-get install -y git && \
-    git clone https://github.com/GhaliChraibi17/MovieRecommendation-Streamlit.git /app
+    git clone https://github.com/GhaliChraibi17/MovieRecommendation-Streamlit /app
 
 # Install the required Python packages
-RUN export SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Expose port 8501 to allow external access to the Streamlit app
 EXPOSE 8501
