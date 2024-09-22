@@ -6,10 +6,12 @@ This is a **Streamlit-based Movie Recommendation System** that uses the MovieLen
 
 ## Setup Running the Movie Recommendation App with Docker
 
+Start by cloning the git repository ```git clone https://github.com/GhaliChraibi17/MovieRecommendation-Streamlit```
+
 Once you're in the root directory of the project (where the `Dockerfile` is located). Run the following commands to build the Docker image and run the container for launching the app:
 
-```bash docker build -t movie-recommendation-app```
-```bash docker run -p 8501:8501 movie-recommendation-app```
+```docker build -t movie-recommendation-app```
+```docker run -p 8501:8501 movie-recommendation-app```
 
 
 ## Features
