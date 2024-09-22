@@ -15,8 +15,8 @@ def load_ratings():
     ratings = pd.read_csv('ml-latest-small/ratings.csv')
     return ratings
 
-# Fetch movie poster using OMDB API and IMDb ID
-def fetch_poster_url(imdb_id):
+# Fetch movie details (poster and plot) using OMDB API and IMDb ID
+def fetch_movie_details(imdb_id):
     # Format imdb_id with leading zeros (7 digits)
     imdb_id_str = f"{imdb_id:07d}"
     search_url = f"http://www.omdbapi.com/?i=tt{imdb_id_str}&apikey={OMDB_API_KEY}"
@@ -24,10 +24,10 @@ def fetch_poster_url(imdb_id):
     
     if response.status_code == 200:
         data = response.json()
-        if 'Poster' in data and data['Poster'] != 'N/A':
-            return data['Poster']
-    return None  # Return None if no poster found or if poster is 'N/A'
-
+        poster_url = data.get('Poster') if data.get('Poster') != 'N/A' else None
+        plot = data.get('Plot') if data.get('Plot') != 'N/A' else 'Plot not available.'
+        return poster_url, plot
+    return None, 'Plot not available.'  # Return None for poster and default plot text if not found
 
 # Get movie recommendations
 from scipy.spatial.distance import cosine
@@ -56,8 +56,8 @@ def get_movie_recommendations(movie_id, ratings_matrix, movies, links, k=5):
         
         # Get IMDb ID from links.csv for the recommended movie
         imdbID = links[links['movieId'] == recommended_movie_id]['imdbId'].values[0]
-        poster_url = fetch_poster_url(imdbID)  # Fetch poster using IMDb ID
-        recommendations.append((movie_title, poster_url, imdbID))
+        poster_url, plot = fetch_movie_details(imdbID)  # Fetch poster and plot using IMDb ID
+        recommendations.append((movie_title, poster_url, plot, imdbID))
     return recommendations
 
 
@@ -83,8 +83,12 @@ if st.button('Recommend'):
     st.write('Recommended movies:')
     columns = st.columns(len(recommendations))  # Create a column for each recommendation
 
-    for i, (movie, poster_url, imdbID) in enumerate(recommendations):
+    for i, (movie, poster_url, plot, imdbID) in enumerate(recommendations):
         with columns[i]:
             if poster_url:
                 st.image(poster_url, width=100) 
             st.write(movie)  # Display the movie title below the poster
+            
+            # Use expander to show plot only when user clicks to expand
+            with st.expander(f"Plot for {movie}"):
+                st.write(plot)
